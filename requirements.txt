@@ -1,0 +1,7 @@
+gunicorn
+flask_cors
+Flask
+python-dotenv
+requests
+plotly
+pandas
