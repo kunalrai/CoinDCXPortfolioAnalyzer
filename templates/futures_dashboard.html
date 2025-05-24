@@ -5,102 +5,216 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CoinDCX Futures Portfolio</title>
     <script src="https://cdn.plot.ly/plotly-2.26.0.min.js"></script>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'crypto-green': '#00D4AA',
+                        'crypto-red': '#FF4757',
+                        'crypto-blue': '#3742FA',
+                        'crypto-purple': '#A55EEA',
+                        'dark-900': '#0F0F1A',
+                        'dark-800': '#1A1A2E',
+                        'dark-700': '#2C2D3F',
+                    },
+                    animation: {
+                        'pulse-glow': 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'fade-in': 'fadeIn 0.5s ease-in-out',
+                        'slide-up': 'slideUp 0.3s ease-out',
+                    },
+                }
+            }
+        }
+    </script>
     <style>
-        .positive { color: #28a745; }
-        .negative { color: #dc3545; }
-        .long { color: #007bff; }
-        .short { color: #fd7e14; }
-        .chart-container { height: 400px; margin: 20px 0; }
-        .loading { text-align: center; padding: 50px; }
-        .position-card { margin-bottom: 15px; }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes slideUp {
+            from { transform: translateY(10px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .crypto-glow {
+            box-shadow: 0 0 20px rgba(0, 212, 170, 0.3);
+        }
+        .chart-container {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+        }
     </style>
 </head>
-<body>
-    <div class="container-fluid">
-        <h1 class="text-center mb-4">CoinDCX Futures Portfolio</h1>
-        
-        <div id="loading" class="loading">
-            <div class="spinner-border" role="status"></div>
-            <p>Loading futures data...</p>
+<body class="bg-gradient-to-br from-dark-900 via-dark-800 to-dark-700 text-white min-h-screen">
+    <!-- Header -->
+    <header class="glass-effect shadow-2xl">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <div class="w-10 h-10 bg-crypto-green rounded-xl flex items-center justify-center crypto-glow">
+                        <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 2L2 7v10c0 5.55 3.84 9.739 9 11 5.16-1.261 9-5.45 9-11V7l-10-5z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-bold bg-gradient-to-r from-crypto-green to-crypto-blue bg-clip-text text-transparent">
+                            CoinDCX Futures
+                        </h1>
+                        <p class="text-gray-400 text-sm">Portfolio Dashboard</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div class="hidden sm:flex items-center space-x-2 text-sm text-gray-400">
+                        <div class="w-2 h-2 bg-crypto-green rounded-full animate-pulse"></div>
+                        <span>Live</span>
+                    </div>
+                    <button onclick="loadPortfolio()" class="p-2 hover:bg-white/10 rounded-lg transition-colors">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
         </div>
-        
-        <div id="dashboard" style="display: none;">
-            <!-- Wallet Summary -->
-            <div class="row mb-4">
-                <div class="col-md-3">
-                    <div class="card">
-                        <div class="card-body text-center">
-                            <h5>Total Balance</h5>
-                            <h3 id="totalBalance">-</h3>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Loading State -->
+        <div id="loading" class="flex flex-col items-center justify-center py-20">
+            <div class="relative">
+                <div class="w-16 h-16 border-4 border-crypto-green/30 border-t-crypto-green rounded-full animate-spin"></div>
+                <div class="absolute inset-0 w-16 h-16 border-4 border-transparent border-b-crypto-blue rounded-full animate-spin animation-delay-75"></div>
+            </div>
+            <p class="mt-6 text-gray-400 text-lg">Loading futures data...</p>
+            <div class="mt-2 flex space-x-1">
+                <div class="w-2 h-2 bg-crypto-green rounded-full animate-bounce"></div>
+                <div class="w-2 h-2 bg-crypto-blue rounded-full animate-bounce animation-delay-100"></div>
+                <div class="w-2 h-2 bg-crypto-purple rounded-full animate-bounce animation-delay-200"></div>
+            </div>
+        </div>
+
+        <!-- Dashboard -->
+        <div id="dashboard" class="hidden animate-fade-in">
+            <!-- Metrics Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div class="glass-effect rounded-2xl p-6 hover:scale-105 transition-transform duration-300">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-400 text-sm font-medium">Total Balance</p>
+                            <p id="totalBalance" class="text-2xl font-bold text-white mt-1">-</p>
+                        </div>
+                        <div class="w-12 h-12 bg-crypto-green/20 rounded-xl flex items-center justify-center">
+                            <svg class="w-6 h-6 text-crypto-green" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                            </svg>
                         </div>
                     </div>
                 </div>
-                <div class="col-md-3">
-                    <div class="card">
-                        <div class="card-body text-center">
-                            <h5>Available Balance</h5>
-                            <h3 id="availableBalance">-</h3>
+
+                <div class="glass-effect rounded-2xl p-6 hover:scale-105 transition-transform duration-300">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-400 text-sm font-medium">Available Balance</p>
+                            <p id="availableBalance" class="text-2xl font-bold text-white mt-1">-</p>
+                        </div>
+                        <div class="w-12 h-12 bg-crypto-blue/20 rounded-xl flex items-center justify-center">
+                            <svg class="w-6 h-6 text-crypto-blue" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M11,8C11,7.45 11.45,7 12,7S13,7.45 13,8 12.55,9 12,9 11,8.55 11,8M18,6A3,3 0 0,1 21,9V19A3,3 0 0,1 18,22H6A3,3 0 0,1 3,19V9A3,3 0 0,1 6,6H7V4A5,5 0 0,1 12,-1A5,5 0 0,1 17,4V6H18M12,1A3,3 0 0,0 9,4V6H15V4A3,3 0 0,0 12,1Z"/>
+                            </svg>
                         </div>
                     </div>
                 </div>
-                <div class="col-md-3">
-                    <div class="card">
-                        <div class="card-body text-center">
-                            <h5>Total PnL</h5>
-                            <h3 id="totalPnL">-</h3>
+
+                <div class="glass-effect rounded-2xl p-6 hover:scale-105 transition-transform duration-300">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-400 text-sm font-medium">Total PnL</p>
+                            <p id="totalPnL" class="text-2xl font-bold mt-1">-</p>
+                        </div>
+                        <div class="w-12 h-12 bg-crypto-purple/20 rounded-xl flex items-center justify-center">
+                            <svg class="w-6 h-6 text-crypto-purple" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M16,6L18.29,8.29L13.41,13.17L9.41,9.17L2,16.59L3.41,18L9.41,12L13.41,16L19.71,9.71L22,12V6H16Z"/>
+                            </svg>
                         </div>
                     </div>
                 </div>
-                <div class="col-md-3">
-                    <div class="card">
-                        <div class="card-body text-center">
-                            <h5>Positions</h5>
-                            <h6 id="positionCount">-</h6>
+
+                <div class="glass-effect rounded-2xl p-6 hover:scale-105 transition-transform duration-300">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-400 text-sm font-medium">Positions</p>
+                            <div id="positionCount" class="text-2xl font-bold text-white mt-1">-</div>
+                        </div>
+                        <div class="w-12 h-12 bg-yellow-500/20 rounded-xl flex items-center justify-center">
+                            <svg class="w-6 h-6 text-yellow-500" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M3,11H5A2,2 0 0,1 7,13V19A2,2 0 0,1 5,21H3A2,2 0 0,1 1,19V13A2,2 0 0,1 3,11M3,13V19H5V13H3M9,11H11A2,2 0 0,1 13,13V19A2,2 0 0,1 11,21H9A2,2 0 0,1 7,19V13A2,2 0 0,1 9,11M9,13V19H11V13H9M15,11H17A2,2 0 0,1 19,13V19A2,2 0 0,1 17,21H15A2,2 0 0,1 13,19V13A2,2 0 0,1 15,11M15,13V19H17V13H15M19,11H21A2,2 0 0,1 23,13V19A2,2 0 0,1 21,21H19A2,2 0 0,1 17,19V13A2,2 0 0,1 19,11M19,13V19H21V13H19Z"/>
+                            </svg>
                         </div>
                     </div>
                 </div>
             </div>
-            
+
             <!-- Charts -->
-            <div class="row">
-                <div class="col-md-6">
-                    <div id="pnlChart" class="chart-container"></div>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                <div class="chart-container rounded-2xl p-6">
+                    <h3 class="text-lg font-semibold mb-4 text-white">PnL Distribution</h3>
+                    <div id="pnlChart" class="h-80"></div>
                 </div>
-                <div class="col-md-6">
-                    <div id="positionsChart" class="chart-container"></div>
+                <div class="chart-container rounded-2xl p-6">
+                    <h3 class="text-lg font-semibold mb-4 text-white">Position Overview</h3>
+                    <div id="positionsChart" class="h-80"></div>
                 </div>
             </div>
-            
+
             <!-- Positions Table -->
-            <div class="row">
-                <div class="col-12">
-                    <h3>Active Positions</h3>
-                    <div class="table-responsive">
-                        <table id="positionsTable" class="table table-striped">
-                            <thead>
-                                <tr>
-                                    <th>Pair</th>
-                                    <th>Position</th>
-                                    <th>Size</th>
-                                    <th>Entry Price</th>
-                                    <th>Current Price</th>
-                                    <th>PnL</th>
-                                    <th>PnL %</th>
-                                    <th>Margin</th>
-                                    <th>Leverage</th>
-                                    <th>Type</th>
-                                </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
+            <div class="glass-effect rounded-2xl p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-xl font-bold text-white">Active Positions</h3>
+                    <div class="flex items-center space-x-2 text-sm text-gray-400">
+                        <div class="w-2 h-2 bg-crypto-green rounded-full animate-pulse"></div>
+                        <span>Real-time</span>
                     </div>
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="border-b border-gray-700">
+                                <th class="text-left py-3 px-4 font-medium text-gray-400">Pair</th>
+                                <th class="text-left py-3 px-4 font-medium text-gray-400">Position</th>
+                                <th class="text-right py-3 px-4 font-medium text-gray-400">Size</th>
+                                <th class="text-right py-3 px-4 font-medium text-gray-400">Entry</th>
+                                <th class="text-right py-3 px-4 font-medium text-gray-400">Current</th>
+                                <th class="text-right py-3 px-4 font-medium text-gray-400">PnL</th>
+                                <th class="text-right py-3 px-4 font-medium text-gray-400">PnL %</th>
+                                <th class="text-right py-3 px-4 font-medium text-gray-400">Margin</th>
+                                <th class="text-center py-3 px-4 font-medium text-gray-400">Leverage</th>
+                                <th class="text-center py-3 px-4 font-medium text-gray-400">Type</th>
+                            </tr>
+                        </thead>
+                        <tbody id="positionsTableBody" class="divide-y divide-gray-700">
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
-    </div>
+    </main>
 
     <script>
+        let refreshInterval;
+        let retryCount = 0;
+        const MAX_RETRIES = 3;
+
         async function loadPortfolio() {
             try {
                 const response = await fetch('/api/portfolio');
@@ -112,27 +226,42 @@
                 const data = await response.json();
                 
                 if (data.error) {
-                    showError('API Error: ' + data.error);
-                    return;
+                    throw new Error('API Error: ' + data.error);
                 }
                 
                 updateWalletMetrics(data.wallet, data.metrics);
                 updatePositionsTable(data.positions);
-                loadCharts();
+                await loadCharts();
                 
-                document.getElementById('loading').style.display = 'none';
-                document.getElementById('dashboard').style.display = 'block';
+                document.getElementById('loading').classList.add('hidden');
+                document.getElementById('dashboard').classList.remove('hidden');
+                
+                retryCount = 0;
             } catch (error) {
-                showError('Failed to load portfolio: ' + error.message);
+                console.error('Portfolio load error:', error);
+                
+                if (retryCount < MAX_RETRIES) {
+                    retryCount++;
+                    setTimeout(() => loadPortfolio(), 2000 * retryCount);
+                } else {
+                    showError('Failed to load portfolio: ' + error.message);
+                }
             }
         }
         
         function showError(message) {
             document.getElementById('loading').innerHTML = `
-                <div class="alert alert-danger" role="alert">
-                    <h4>Error</h4>
-                    <p>${message}</p>
-                    <button class="btn btn-primary" onclick="location.reload()">Retry</button>
+                <div class="text-center">
+                    <div class="w-16 h-16 bg-crypto-red/20 rounded-full mx-auto mb-4 flex items-center justify-center">
+                        <svg class="w-8 h-8 text-crypto-red" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12,2C17.53,2 22,6.47 22,12C22,17.53 17.53,22 12,22C6.47,22 2,17.53 2,12C2,6.47 6.47,2 12,2M15.59,7L12,10.59L8.41,7L7,8.41L10.59,12L7,15.59L8.41,17L12,13.41L15.59,17L17,15.59L13.41,12L17,8.41L15.59,7Z"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-crypto-red mb-2">Connection Error</h3>
+                    <p class="text-gray-400 mb-6">${message}</p>
+                    <button onclick="location.reload()" class="bg-crypto-green hover:bg-crypto-green/80 px-6 py-3 rounded-xl font-medium transition-colors">
+                        Retry Connection
+                    </button>
                 </div>
             `;
         }
@@ -147,35 +276,89 @@
             const pnlElement = document.getElementById('totalPnL');
             const pnl = wallet.total_pnl;
             pnlElement.textContent = `$${pnl.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
-            pnlElement.className = pnl >= 0 ? 'positive' : 'negative';
+            pnlElement.className = `text-2xl font-bold mt-1 ${pnl >= 0 ? 'text-crypto-green' : 'text-crypto-red'}`;
             
             document.getElementById('positionCount').innerHTML = 
-                `${metrics.total_positions} total<br/>
-                <span class="long">${metrics.long_positions} long</span> | 
-                <span class="short">${metrics.short_positions} short</span>`;
+                `<div class="text-2xl font-bold">${metrics.total_positions}</div>
+                <div class="text-xs text-gray-400 mt-1">
+                    <span class="text-crypto-blue">${metrics.long_positions} LONG</span> • 
+                    <span class="text-orange-400">${metrics.short_positions} SHORT</span>
+                </div>`;
         }
         
         function updatePositionsTable(positions) {
-            const tbody = document.querySelector('#positionsTable tbody');
+            const tbody = document.getElementById('positionsTableBody');
             tbody.innerHTML = '';
             
-            positions.forEach(pos => {
-                const row = tbody.insertRow();
+            positions.forEach((pos, index) => {
+                const row = document.createElement('tr');
                 const isLong = pos.active_pos > 0;
+                const pnlPositive = pos.pnl >= 0;
+                
+                row.className = `hover:bg-white/5 transition-colors animate-slide-up`;
+                row.style.animationDelay = `${index * 50}ms`;
                 
                 row.innerHTML = `
-                    <td><strong>${pos.pair.replace('B-', '').replace('_USDT', '')}</strong></td>
-                    <td class="${isLong ? 'long' : 'short'}">${isLong ? 'LONG' : 'SHORT'}</td>
-                    <td>${Math.abs(pos.active_pos).toLocaleString(undefined, {maximumFractionDigits: 4})}</td>
-                    <td>$${pos.avg_price.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
-                    <td>$${pos.current_price.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
-                    <td class="${pos.pnl >= 0 ? 'positive' : 'negative'}">$${pos.pnl.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
-                    <td class="${pos.pnl_percent >= 0 ? 'positive' : 'negative'}">${pos.pnl_percent.toFixed(2)}%</td>
-                    <td>$${pos.locked_margin.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
-                    <td>${pos.leverage}x</td>
-                    <td><span class="badge ${pos.margin_type === 'crossed' ? 'bg-primary' : 'bg-secondary'}">${pos.margin_type}</span></td>
+                    <td class="py-4 px-4">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-8 h-8 rounded-lg bg-gradient-to-r from-crypto-blue to-crypto-purple flex items-center justify-center text-white font-bold text-sm">
+                                ${pos.pair.replace('B-', '').replace('_USDT', '').substring(0, 3)}
+                            </div>
+                            <span class="font-medium text-white">${pos.pair.replace('B-', '').replace('_USDT', '')}</span>
+                        </div>
+                    </td>
+                    <td class="py-4 px-4">
+                        <span class="px-3 py-1 rounded-full text-xs font-medium ${isLong ? 'bg-crypto-blue/20 text-crypto-blue' : 'bg-orange-500/20 text-orange-400'}">
+                            ${isLong ? 'LONG' : 'SHORT'}
+                        </span>
+                    </td>
+                    <td class="py-4 px-4 text-right text-white font-medium">
+                        ${Math.abs(pos.active_pos).toLocaleString(undefined, {maximumFractionDigits: 4})}
+                    </td>
+                    <td class="py-4 px-4 text-right text-gray-300">
+                        $${pos.avg_price.toLocaleString(undefined, {minimumFractionDigits: 2})}
+                    </td>
+                    <td class="py-4 px-4 text-right text-gray-300">
+                        $${pos.current_price.toLocaleString(undefined, {minimumFractionDigits: 2})}
+                    </td>
+                    <td class="py-4 px-4 text-right font-bold ${pnlPositive ? 'text-crypto-green' : 'text-crypto-red'}">
+                        $${pos.pnl.toLocaleString(undefined, {minimumFractionDigits: 2})}
+                    </td>
+                    <td class="py-4 px-4 text-right font-medium ${pnlPositive ? 'text-crypto-green' : 'text-crypto-red'}">
+                        ${pos.pnl_percent > 0 ? '+' : ''}${pos.pnl_percent.toFixed(2)}%
+                    </td>
+                    <td class="py-4 px-4 text-right text-gray-300">
+                        $${pos.locked_margin.toLocaleString(undefined, {minimumFractionDigits: 2})}
+                    </td>
+                    <td class="py-4 px-4 text-center">
+                        <span class="px-2 py-1 bg-yellow-500/20 text-yellow-400 rounded text-sm font-medium">
+                            ${pos.leverage}x
+                        </span>
+                    </td>
+                    <td class="py-4 px-4 text-center">
+                        <span class="px-2 py-1 rounded text-xs font-medium ${pos.margin_type === 'crossed' ? 'bg-crypto-green/20 text-crypto-green' : 'bg-gray-500/20 text-gray-400'}">
+                            ${pos.margin_type.toUpperCase()}
+                        </span>
+                    </td>
                 `;
+                
+                tbody.appendChild(row);
             });
+            
+            if (positions.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="10" class="py-12 text-center text-gray-400">
+                            <div class="flex flex-col items-center">
+                                <svg class="w-12 h-12 mb-4 opacity-50" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M11,16.5L6.5,12L7.91,10.59L11,13.67L16.59,8.09L18,9.5L11,16.5Z"/>
+                                </svg>
+                                <p>No active positions</p>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }
         }
         
         async function loadCharts() {
@@ -183,29 +366,61 @@
                 const response = await fetch('/api/charts');
                 
                 if (!response.ok) {
-                    console.error('Charts API failed:', response.status);
+                    console.warn('Charts API failed:', response.status);
                     return;
                 }
                 
                 const charts = await response.json();
                 
                 if (charts.error) {
-                    console.error('Chart error:', charts.error);
+                    console.warn('Chart error:', charts.error);
                     return;
                 }
                 
-                Plotly.newPlot('pnlChart', charts.pnl.data, charts.pnl.layout);
-                Plotly.newPlot('positionsChart', charts.positions.data, charts.positions.layout);
+                const chartConfig = {
+                    displayModeBar: false,
+                    responsive: true,
+                    paper_bgcolor: 'rgba(0,0,0,0)',
+                    plot_bgcolor: 'rgba(0,0,0,0)',
+                    font: { color: '#ffffff', family: 'system-ui' }
+                };
+                
+                Plotly.newPlot('pnlChart', charts.pnl.data, {
+                    ...charts.pnl.layout,
+                    ...chartConfig
+                }, { displayModeBar: false });
+                
+                Plotly.newPlot('positionsChart', charts.positions.data, {
+                    ...charts.positions.layout,
+                    ...chartConfig
+                }, { displayModeBar: false });
             } catch (error) {
-                console.error('Failed to load charts:', error);
+                console.warn('Failed to load charts:', error);
             }
         }
         
-        // Load portfolio on page load
-        loadPortfolio();
+        function startAutoRefresh() {
+            refreshInterval = setInterval(loadPortfolio, 30000);
+        }
         
-        // Auto-refresh every 30 seconds (futures are more active)
-        setInterval(loadPortfolio, 30000);
+        function stopAutoRefresh() {
+            if (refreshInterval) {
+                clearInterval(refreshInterval);
+                refreshInterval = null;
+            }
+        }
+        
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                stopAutoRefresh();
+            } else {
+                startAutoRefresh();
+                loadPortfolio();
+            }
+        });
+        
+        loadPortfolio();
+        startAutoRefresh();
     </script>
 </body>
 </html>
