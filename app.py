@@ -254,7 +254,7 @@ analyzer = FuturesPortfolioAnalyzer(
 
 @app.route('/')
 def dashboard():
-    return render_template('futures_dashboard.html')
+    return render_template('dashboard.html')
 
 @app.route('/api/portfolio')
 def get_portfolio():

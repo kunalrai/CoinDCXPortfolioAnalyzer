@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}CoinDCX Futures Portfolio{% endblock %}</title>
+    <script src="https://cdn.plot.ly/plotly-2.26.0.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'crypto-green': '#00D4AA',
+                        'crypto-red': '#FF4757',
+                        'crypto-blue': '#3742FA',
+                        'crypto-purple': '#A55EEA',
+                        'dark-900': '#0F0F1A',
+                        'dark-800': '#1A1A2E',
+                        'dark-700': '#2C2D3F',
+                    },
+                    animation: {
+                        'pulse-glow': 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'fade-in': 'fadeIn 0.5s ease-in-out',
+                        'slide-up': 'slideUp 0.3s ease-out',
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes slideUp {
+            from { transform: translateY(10px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .crypto-glow {
+            box-shadow: 0 0 20px rgba(0, 212, 170, 0.3);
+        }
+        .chart-container {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+        }
+    </style>
+    {% block head %}{% endblock %}
+</head>
+<body class="bg-gradient-to-br from-dark-900 via-dark-800 to-dark-700 text-white min-h-screen">
+    {% include 'header.html' %}
+    
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {% block content %}{% endblock %}
+    </main>
+    
+    {% include 'footer.html' %}
+    
+    {% block scripts %}{% endblock %}
+</body>
+</html>
