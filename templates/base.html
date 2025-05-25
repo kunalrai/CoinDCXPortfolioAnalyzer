@@ -57,13 +57,94 @@
     {% block head %}{% endblock %}
 </head>
 <body class="bg-gradient-to-br from-dark-900 via-dark-800 to-dark-700 text-white min-h-screen">
-    {% include 'header.html' %}
+    {% include 'nav.html' %}
     
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {% block content %}{% endblock %}
     </main>
     
     {% include 'footer.html' %}
+    
+    <!-- Global Authentication Script -->
+    <script>
+        // Check authentication status on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAuthStatus();
+        });
+
+        async function checkAuthStatus() {
+            try {
+                const response = await fetch('/api/auth/user');
+                const data = await response.json();
+                
+                if (data.user) {
+                    showUserButtons(data.user);
+                } else {
+                    showGuestButtons();
+                }
+            } catch (error) {
+                console.error('Auth check error:', error);
+                showGuestButtons();
+            }
+        }
+
+        function showUserButtons(user) {
+            const guestButtons = document.getElementById('guest-buttons');
+            const userButtons = document.getElementById('user-buttons');
+            const userEmail = document.getElementById('user-email');
+            const userInitial = document.getElementById('user-initial');
+            
+            if (guestButtons) guestButtons.classList.add('hidden');
+            if (userButtons) {
+                userButtons.classList.remove('hidden');
+                userButtons.classList.add('flex');
+            }
+            if (userEmail) userEmail.textContent = user.email || 'User';
+            if (userInitial) {
+                const email = user.email || 'U';
+                userInitial.textContent = email.charAt(0).toUpperCase();
+            }
+        }
+
+        function showGuestButtons() {
+            const guestButtons = document.getElementById('guest-buttons');
+            const userButtons = document.getElementById('user-buttons');
+            
+            if (guestButtons) {
+                guestButtons.classList.remove('hidden');
+                guestButtons.classList.add('flex');
+            }
+            if (userButtons) {
+                userButtons.classList.add('hidden');
+                userButtons.classList.remove('flex');
+            }
+        }
+
+        // Global function to set session after successful authentication
+        window.setUserSession = async function(user, accessToken) {
+            try {
+                const response = await fetch('/api/auth/session', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        user: user,
+                        access_token: accessToken
+                    })
+                });
+                
+                if (response.ok) {
+                    showUserButtons(user);
+                    return true;
+                }
+                return false;
+            } catch (error) {
+                console.error('Session set error:', error);
+                return false;
+            }
+        };
+    </script>
     
     {% block scripts %}{% endblock %}
 </body>

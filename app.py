@@ -4,14 +4,32 @@ import hashlib
 import json
 import time
 import requests
-from flask import Flask, render_template, jsonify
+from flask import Flask, render_template, jsonify, session, request, redirect, url_for
 from dotenv import load_dotenv
 import plotly.graph_objects as go
 import plotly.express as px
 from plotly.utils import PlotlyJSONEncoder
+from supabase import create_client, Client
+from functools import wraps
 
 load_dotenv()
 app = Flask(__name__)
+app.secret_key = os.getenv('SECRET_KEY', 'your-super-secret-key-change-this-in-production-12345')
+
+# Initialize Supabase client
+supabase_url = os.getenv('SUPABASE_URL')
+supabase_key = os.getenv('SUPABASE_ANON_KEY')
+supabase: Client = create_client(supabase_url, supabase_key)
+
+# Authentication decorator
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        # Check if user is authenticated via session
+        if 'user' not in session:
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return decorated_function
 
 class CoinDCXFuturesAPI:
     def __init__(self, api_key, api_secret):
@@ -288,8 +306,57 @@ analyzer = FuturesPortfolioAnalyzer(
 )
 
 @app.route('/')
+def home():
+    return render_template('home.html')
+
+@app.route('/login')
+def login():
+    # If user is already logged in, redirect to dashboard
+    if 'user' in session:
+        return redirect(url_for('dashboard'))
+    return render_template('login.html', supabase_url=supabase_url, supabase_key=supabase_key)
+
+@app.route('/signup')
+def signup():
+    # If user is already logged in, redirect to dashboard
+    if 'user' in session:
+        return redirect(url_for('dashboard'))
+    return render_template('signup.html', supabase_url=supabase_url, supabase_key=supabase_key)
+
+@app.route('/auth/callback')
+def auth_callback():
+    return render_template('auth_callback.html', supabase_url=supabase_url, supabase_key=supabase_key)
+
+@app.route('/logout')
+def logout():
+    session.clear()
+    return redirect(url_for('home'))
+
+@app.route('/api/auth/session', methods=['POST'])
+def set_session():
+    """Set user session from frontend authentication"""
+    try:
+        data = request.get_json()
+        if data and 'user' in data:
+            session['user'] = data['user']
+            session['access_token'] = data.get('access_token')
+            return jsonify({'success': True})
+        return jsonify({'error': 'Invalid session data'}), 400
+    except Exception as e:
+        print(f"Session error: {e}")
+        return jsonify({'error': 'Failed to set session'}), 500
+
+@app.route('/api/auth/user')
+def get_user():
+    """Get current user from session"""
+    if 'user' in session:
+        return jsonify({'user': session['user']})
+    return jsonify({'user': None})
+
+@app.route('/dashboard')
+@login_required
 def dashboard():
-    return render_template('dashboard.html')
+    return render_template('dashboard.html', user=session.get('user'))
 
 @app.route('/api/fear-greed')
 def get_fear_greed_index():

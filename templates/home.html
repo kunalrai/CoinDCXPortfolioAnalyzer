@@ -1,0 +1,366 @@
+{% extends "base.html" %}
+
+{% block title %}CoinDCX Portfolio Analyzer - Advanced Crypto Trading Analytics{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="relative overflow-hidden py-20">
+    <div class="absolute inset-0 bg-gradient-to-br from-crypto-blue/20 to-crypto-purple/20 rounded-3xl"></div>
+    <div class="relative z-10 text-center">
+        <div class="animate-fade-in">
+            <h1 class="text-5xl md:text-7xl font-bold mb-6">
+                <span class="bg-gradient-to-r from-crypto-green via-crypto-blue to-crypto-purple bg-clip-text text-transparent">
+                    Master Your
+                </span>
+                <br>
+                <span class="text-white">Crypto Portfolio</span>
+            </h1>
+            <p class="text-xl md:text-2xl text-gray-300 mb-8 max-w-3xl mx-auto">
+                Advanced analytics and real-time monitoring for CoinDCX futures trading. 
+                Track positions, analyze performance, and optimize your trading strategy.
+            </p>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                <button class="bg-gradient-to-r from-crypto-green to-crypto-blue px-8 py-4 rounded-xl font-semibold text-white hover:shadow-lg hover:shadow-crypto-green/25 transition-all duration-200 transform hover:scale-105 text-lg">
+                    Start Free Trial
+                </button>
+                <button class="border border-crypto-green text-crypto-green px-8 py-4 rounded-xl font-semibold hover:bg-crypto-green hover:text-white transition-all duration-200 text-lg">
+                    View Demo
+                </button>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section id="features" class="py-20">
+    <div class="text-center mb-16">
+        <h2 class="text-4xl md:text-5xl font-bold text-white mb-4">
+            Powerful <span class="bg-gradient-to-r from-crypto-green to-crypto-blue bg-clip-text text-transparent">Features</span>
+        </h2>
+        <p class="text-xl text-gray-300 max-w-2xl mx-auto">
+            Everything you need to analyze and optimize your crypto futures trading
+        </p>
+    </div>
+
+    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <!-- Real-time Portfolio Tracking -->
+        <div class="glass-effect p-8 rounded-2xl hover:shadow-2xl transition-all duration-300 group">
+            <div class="w-16 h-16 bg-gradient-to-r from-crypto-green to-crypto-blue rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                </svg>
+            </div>
+            <h3 class="text-2xl font-bold text-white mb-4">Real-time Tracking</h3>
+            <p class="text-gray-300 mb-6">
+                Monitor your futures positions in real-time with live P&L updates, position sizes, and market data.
+            </p>
+            <ul class="text-sm text-gray-400 space-y-2">
+                <li class="flex items-center"><span class="w-2 h-2 bg-crypto-green rounded-full mr-2"></span>Live position monitoring</li>
+                <li class="flex items-center"><span class="w-2 h-2 bg-crypto-green rounded-full mr-2"></span>Real-time P&L calculation</li>
+                <li class="flex items-center"><span class="w-2 h-2 bg-crypto-green rounded-full mr-2"></span>Market data integration</li>
+            </ul>
+        </div>
+
+        <!-- Advanced Analytics -->
+        <div class="glass-effect p-8 rounded-2xl hover:shadow-2xl transition-all duration-300 group">
+            <div class="w-16 h-16 bg-gradient-to-r from-crypto-blue to-crypto-purple rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
+            </div>
+            <h3 class="text-2xl font-bold text-white mb-4">Advanced Analytics</h3>
+            <p class="text-gray-300 mb-6">
+                Comprehensive charts and analytics to understand your trading performance and identify opportunities.
+            </p>
+            <ul class="text-sm text-gray-400 space-y-2">
+                <li class="flex items-center"><span class="w-2 h-2 bg-crypto-blue rounded-full mr-2"></span>Interactive charts</li>
+                <li class="flex items-center"><span class="w-2 h-2 bg-crypto-blue rounded-full mr-2"></span>Performance metrics</li>
+                <li class="flex items-center"><span class="w-2 h-2 bg-crypto-blue rounded-full mr-2"></span>Risk analysis</li>
+            </ul>
+        </div>
+
+        <!-- Risk Management -->
+        <div class="glass-effect p-8 rounded-2xl hover:shadow-2xl transition-all duration-300 group">
+            <div class="w-16 h-16 bg-gradient-to-r from-crypto-purple to-crypto-red rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                </svg>
+            </div>
+            <h3 class="text-2xl font-bold text-white mb-4">Risk Management</h3>
+            <p class="text-gray-300 mb-6">
+                Advanced risk management tools including liquidation price monitoring and margin ratio tracking.
+            </p>
+            <ul class="text-sm text-gray-400 space-y-2">
+                <li class="flex items-center"><span class="w-2 h-2 bg-crypto-purple rounded-full mr-2"></span>Liquidation alerts</li>
+                <li class="flex items-center"><span class="w-2 h-2 bg-crypto-purple rounded-full mr-2"></span>Margin monitoring</li>
+                <li class="flex items-center"><span class="w-2 h-2 bg-crypto-purple rounded-full mr-2"></span>Stop-loss tracking</li>
+            </ul>
+        </div>
+
+        <!-- Market Sentiment -->
+        <div class="glass-effect p-8 rounded-2xl hover:shadow-2xl transition-all duration-300 group">
+            <div class="w-16 h-16 bg-gradient-to-r from-crypto-green to-crypto-purple rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                </svg>
+            </div>
+            <h3 class="text-2xl font-bold text-white mb-4">Market Sentiment</h3>
+            <p class="text-gray-300 mb-6">
+                Stay informed with Fear & Greed Index and market sentiment indicators to time your trades better.
+            </p>
+            <ul class="text-sm text-gray-400 space-y-2">
+                <li class="flex items-center"><span class="w-2 h-2 bg-crypto-green rounded-full mr-2"></span>Fear & Greed Index</li>
+                <li class="flex items-center"><span class="w-2 h-2 bg-crypto-green rounded-full mr-2"></span>Market indicators</li>
+                <li class="flex items-center"><span class="w-2 h-2 bg-crypto-green rounded-full mr-2"></span>Sentiment analysis</li>
+            </ul>
+        </div>
+
+        <!-- Multi-Asset Support -->
+        <div class="glass-effect p-8 rounded-2xl hover:shadow-2xl transition-all duration-300 group">
+            <div class="w-16 h-16 bg-gradient-to-r from-crypto-blue to-crypto-green rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                </svg>
+            </div>
+            <h3 class="text-2xl font-bold text-white mb-4">Multi-Asset Support</h3>
+            <p class="text-gray-300 mb-6">
+                Track multiple cryptocurrency futures including BTC, ETH, and other major altcoins in one dashboard.
+            </p>
+            <ul class="text-sm text-gray-400 space-y-2">
+                <li class="flex items-center"><span class="w-2 h-2 bg-crypto-blue rounded-full mr-2"></span>Bitcoin futures</li>
+                <li class="flex items-center"><span class="w-2 h-2 bg-crypto-blue rounded-full mr-2"></span>Ethereum futures</li>
+                <li class="flex items-center"><span class="w-2 h-2 bg-crypto-blue rounded-full mr-2"></span>Altcoin futures</li>
+            </ul>
+        </div>
+
+        <!-- API Integration -->
+        <div class="glass-effect p-8 rounded-2xl hover:shadow-2xl transition-all duration-300 group">
+            <div class="w-16 h-16 bg-gradient-to-r from-crypto-purple to-crypto-blue rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                </svg>
+            </div>
+            <h3 class="text-2xl font-bold text-white mb-4">Secure API Integration</h3>
+            <p class="text-gray-300 mb-6">
+                Secure connection to CoinDCX API with read-only access to ensure your funds remain safe.
+            </p>
+            <ul class="text-sm text-gray-400 space-y-2">
+                <li class="flex items-center"><span class="w-2 h-2 bg-crypto-purple rounded-full mr-2"></span>Read-only API access</li>
+                <li class="flex items-center"><span class="w-2 h-2 bg-crypto-purple rounded-full mr-2"></span>Encrypted connections</li>
+                <li class="flex items-center"><span class="w-2 h-2 bg-crypto-purple rounded-full mr-2"></span>Secure data handling</li>
+            </ul>
+        </div>
+    </div>
+</section>
+
+<!-- Utility Section -->
+<section class="py-20 bg-gradient-to-r from-dark-800/50 to-dark-700/50 rounded-3xl my-20">
+    <div class="text-center mb-16">
+        <h2 class="text-4xl md:text-5xl font-bold text-white mb-4">
+            Why Choose <span class="bg-gradient-to-r from-crypto-green to-crypto-blue bg-clip-text text-transparent">Our Platform</span>
+        </h2>
+        <p class="text-xl text-gray-300 max-w-2xl mx-auto">
+            Built by traders, for traders. Experience the difference professional-grade tools make.
+        </p>
+    </div>
+
+    <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div class="text-center">
+            <div class="w-20 h-20 bg-gradient-to-r from-crypto-green to-crypto-blue rounded-full flex items-center justify-center mx-auto mb-6">
+                <span class="text-3xl font-bold text-white">99%</span>
+            </div>
+            <h3 class="text-xl font-bold text-white mb-2">Uptime</h3>
+            <p class="text-gray-300">Reliable monitoring with minimal downtime</p>
+        </div>
+
+        <div class="text-center">
+            <div class="w-20 h-20 bg-gradient-to-r from-crypto-blue to-crypto-purple rounded-full flex items-center justify-center mx-auto mb-6">
+                <span class="text-3xl font-bold text-white">&lt;1s</span>
+            </div>
+            <h3 class="text-xl font-bold text-white mb-2">Response Time</h3>
+            <p class="text-gray-300">Lightning-fast data updates and analysis</p>
+        </div>
+
+        <div class="text-center">
+            <div class="w-20 h-20 bg-gradient-to-r from-crypto-purple to-crypto-red rounded-full flex items-center justify-center mx-auto mb-6">
+                <span class="text-3xl font-bold text-white">24/7</span>
+            </div>
+            <h3 class="text-xl font-bold text-white mb-2">Monitoring</h3>
+            <p class="text-gray-300">Round-the-clock portfolio tracking</p>
+        </div>
+
+        <div class="text-center">
+            <div class="w-20 h-20 bg-gradient-to-r from-crypto-red to-crypto-green rounded-full flex items-center justify-center mx-auto mb-6">
+                <span class="text-3xl font-bold text-white">∞</span>
+            </div>
+            <h3 class="text-xl font-bold text-white mb-2">Scalability</h3>
+            <p class="text-gray-300">Handle portfolios of any size</p>
+        </div>
+    </div>
+</section>
+
+<!-- Pricing Section -->
+<section id="pricing" class="py-20">
+    <div class="text-center mb-16">
+        <h2 class="text-4xl md:text-5xl font-bold text-white mb-4">
+            Simple <span class="bg-gradient-to-r from-crypto-green to-crypto-blue bg-clip-text text-transparent">Pricing</span>
+        </h2>
+        <p class="text-xl text-gray-300 max-w-2xl mx-auto">
+            Choose the plan that fits your trading needs. Start free, upgrade when you're ready.
+        </p>
+    </div>
+
+    <div class="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+        <!-- Free Plan -->
+        <div class="glass-effect p-8 rounded-2xl border border-gray-600">
+            <div class="text-center mb-8">
+                <h3 class="text-2xl font-bold text-white mb-2">Free</h3>
+                <div class="text-4xl font-bold text-crypto-green mb-2">$0</div>
+                <p class="text-gray-300">Perfect for getting started</p>
+            </div>
+            <ul class="space-y-4 mb-8">
+                <li class="flex items-center text-gray-300">
+                    <svg class="w-5 h-5 text-crypto-green mr-3" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                    </svg>
+                    Up to 5 positions
+                </li>
+                <li class="flex items-center text-gray-300">
+                    <svg class="w-5 h-5 text-crypto-green mr-3" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                    </svg>
+                    Basic analytics
+                </li>
+                <li class="flex items-center text-gray-300">
+                    <svg class="w-5 h-5 text-crypto-green mr-3" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                    </svg>
+                    Real-time updates
+                </li>
+                <li class="flex items-center text-gray-300">
+                    <svg class="w-5 h-5 text-crypto-green mr-3" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                    </svg>
+                    Email support
+                </li>
+            </ul>
+            <button class="w-full border border-crypto-green text-crypto-green py-3 rounded-lg font-semibold hover:bg-crypto-green hover:text-white transition-all duration-200">
+                Get Started Free
+            </button>
+        </div>
+
+        <!-- Pro Plan -->
+        <div class="glass-effect p-8 rounded-2xl border-2 border-crypto-green relative">
+            <div class="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                <span class="bg-gradient-to-r from-crypto-green to-crypto-blue px-4 py-1 rounded-full text-sm font-semibold text-white">
+                    Most Popular
+                </span>
+            </div>
+            <div class="text-center mb-8">
+                <h3 class="text-2xl font-bold text-white mb-2">Pro</h3>
+                <div class="text-4xl font-bold text-crypto-green mb-2">$29</div>
+                <p class="text-gray-300">per month</p>
+            </div>
+            <ul class="space-y-4 mb-8">
+                <li class="flex items-center text-gray-300">
+                    <svg class="w-5 h-5 text-crypto-green mr-3" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                    </svg>
+                    Unlimited positions
+                </li>
+                <li class="flex items-center text-gray-300">
+                    <svg class="w-5 h-5 text-crypto-green mr-3" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                    </svg>
+                    Advanced analytics
+                </li>
+                <li class="flex items-center text-gray-300">
+                    <svg class="w-5 h-5 text-crypto-green mr-3" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                    </svg>
+                    Risk management tools
+                </li>
+                <li class="flex items-center text-gray-300">
+                    <svg class="w-5 h-5 text-crypto-green mr-3" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                    </svg>
+                    Custom alerts
+                </li>
+                <li class="flex items-center text-gray-300">
+                    <svg class="w-5 h-5 text-crypto-green mr-3" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                    </svg>
+                    Priority support
+                </li>
+            </ul>
+            <button class="w-full bg-gradient-to-r from-crypto-green to-crypto-blue py-3 rounded-lg font-semibold text-white hover:shadow-lg hover:shadow-crypto-green/25 transition-all duration-200 transform hover:scale-105">
+                Start Pro Trial
+            </button>
+        </div>
+
+        <!-- Enterprise Plan -->
+        <div class="glass-effect p-8 rounded-2xl border border-gray-600">
+            <div class="text-center mb-8">
+                <h3 class="text-2xl font-bold text-white mb-2">Enterprise</h3>
+                <div class="text-4xl font-bold text-crypto-green mb-2">$99</div>
+                <p class="text-gray-300">per month</p>
+            </div>
+            <ul class="space-y-4 mb-8">
+                <li class="flex items-center text-gray-300">
+                    <svg class="w-5 h-5 text-crypto-green mr-3" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                    </svg>
+                    Everything in Pro
+                </li>
+                <li class="flex items-center text-gray-300">
+                    <svg class="w-5 h-5 text-crypto-green mr-3" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                    </svg>
+                    Multi-account support
+                </li>
+                <li class="flex items-center text-gray-300">
+                    <svg class="w-5 h-5 text-crypto-green mr-3" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                    </svg>
+                    API access
+                </li>
+                <li class="flex items-center text-gray-300">
+                    <svg class="w-5 h-5 text-crypto-green mr-3" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                    </svg>
+                    White-label options
+                </li>
+                <li class="flex items-center text-gray-300">
+                    <svg class="w-5 h-5 text-crypto-green mr-3" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                    </svg>
+                    Dedicated support
+                </li>
+            </ul>
+            <button class="w-full border border-crypto-green text-crypto-green py-3 rounded-lg font-semibold hover:bg-crypto-green hover:text-white transition-all duration-200">
+                Contact Sales
+            </button>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section id="contact" class="py-20 bg-gradient-to-r from-crypto-green/10 to-crypto-blue/10 rounded-3xl">
+    <div class="text-center">
+        <h2 class="text-4xl md:text-5xl font-bold text-white mb-6">
+            Ready to <span class="bg-gradient-to-r from-crypto-green to-crypto-blue bg-clip-text text-transparent">Get Started?</span>
+        </h2>
+        <p class="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
+            Join thousands of traders who trust our platform for their portfolio analysis needs.
+        </p>
+        <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <button class="bg-gradient-to-r from-crypto-green to-crypto-blue px-8 py-4 rounded-xl font-semibold text-white hover:shadow-lg hover:shadow-crypto-green/25 transition-all duration-200 transform hover:scale-105 text-lg">
+                Start Your Free Trial
+            </button>
+            <button class="border border-crypto-green text-crypto-green px-8 py-4 rounded-xl font-semibold hover:bg-crypto-green hover:text-white transition-all duration-200 text-lg">
+                Schedule Demo
+            </button>
+        </div>
+    </div>
+</section>
+{% endblock %}
