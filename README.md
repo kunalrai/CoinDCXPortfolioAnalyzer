@@ -1,6 +1,7 @@
 # CoinDCX Portfolio Analyzer
 
-![CoinDCX Portfolio Analyzer](https://github.com/user-attachments/assets/b237c6cc-c5f2-4954-879a-ff5f2640677a)
+![image](https://github.com/user-attachments/assets/310efa60-6ef0-4ac0-a02a-eea5f78c627c)
+
 
 A comprehensive web-based portfolio analyzer for CoinDCX futures trading. This application provides real-time portfolio tracking, P&L analysis, position monitoring, and risk management tools for futures traders.
 
