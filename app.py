@@ -354,7 +354,7 @@ def get_user():
     return jsonify({'user': None})
 
 @app.route('/dashboard')
-@login_required
+
 def dashboard():
     return render_template('dashboard.html', user=session.get('user'))
 
