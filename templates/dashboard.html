@@ -18,6 +18,22 @@
 <!-- Dashboard -->
 <div id="dashboard" class="hidden animate-fade-in">
     <!-- Metrics Cards -->
+  <div class="glass-effect rounded-2xl p-6 hover:scale-105 transition-transform duration-300">
+    <div class="flex items-center justify-between">
+        <div>
+            <p class="text-gray-400 text-sm font-medium">Fear & Greed Index</p>
+            <p id="fearGreedValue" class="text-2xl font-bold mt-1 text-white">-</p>
+            <p id="fearGreedLabel" class="text-sm text-gray-400 mt-1">-</p>
+            <p id="sellSignalText" class="text-sm font-semibold mt-2 hidden text-orange-400">📢 Sell signal: Extreme Greed</p>
+        </div>
+        <div class="w-12 h-12 bg-crypto-purple/20 rounded-xl flex items-center justify-center">
+            <svg class="w-6 h-6 text-crypto-purple" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12,2A10,10 0 1,1 2,12A10,10 0 0,1 12,2M13,7H11V13H13V7M13,15H11V17H13V15Z"/>
+            </svg>
+        </div>
+    </div>
+</div>
+
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <div class="glass-effect rounded-2xl p-6 hover:scale-105 transition-transform duration-300">
             <div class="flex items-center justify-between">
@@ -107,6 +123,8 @@
                         <th class="text-right py-3 px-4 font-medium text-gray-400">Size</th>
                         <th class="text-right py-3 px-4 font-medium text-gray-400">Entry</th>
                         <th class="text-right py-3 px-4 font-medium text-gray-400">Current</th>
+                        <th class="text-right py-3 px-4 font-medium text-gray-400">Liquidation</th>
+                        <th class="text-right py-3 px-4 font-medium text-gray-400">SL/TP</th>
                         <th class="text-right py-3 px-4 font-medium text-gray-400">PnL</th>
                         <th class="text-right py-3 px-4 font-medium text-gray-400">PnL %</th>
                         <th class="text-right py-3 px-4 font-medium text-gray-400">Margin</th>
@@ -128,6 +146,52 @@
     let retryCount = 0;
     const MAX_RETRIES = 3;
 
+    function calculateLiquidationRisk(currentPrice, liquidationPrice) {
+        if (!liquidationPrice || liquidationPrice === 0) return { level: 'low', text: 'N/A' };
+        
+        const distance = Math.abs((currentPrice - liquidationPrice) / currentPrice) * 100;
+        
+        if (distance < 5) return { level: 'high', text: 'HIGH' };
+        if (distance < 15) return { level: 'medium', text: 'MED' };
+        return { level: 'low', text: 'LOW' };
+    }
+
+    async function loadFearGreedIndex() {
+        try {
+            const res = await fetch('/api/fear-greed');
+            const data = await res.json();
+
+            if (data.error) {
+                throw new Error(data.error);
+            }
+
+            const value = data.value;
+            const label = data.classification;
+
+            document.getElementById('fearGreedValue').textContent = value;
+            document.getElementById('fearGreedLabel').textContent = label;
+
+            const fgClass = value < 30 ? 'text-crypto-red'
+                         : value < 60 ? 'text-yellow-400'
+                         : 'text-crypto-green';
+            document.getElementById('fearGreedValue').classList.add(fgClass);
+
+            const sellSignal = document.getElementById('sellSignalText');
+            if (value > 80) {
+                sellSignal.textContent = "📢 Sell Signal: Market in Extreme Greed — Consider booking profits.";
+                sellSignal.classList.remove('hidden');
+            } else {
+                sellSignal.classList.add('hidden');
+            }
+
+        } catch (err) {
+            console.error("Fear & Greed fetch error:", err);
+            document.getElementById('fearGreedValue').textContent = 'N/A';
+            document.getElementById('fearGreedLabel').textContent = 'Unavailable';
+            document.getElementById('sellSignalText').classList.add('hidden');
+        }
+    }
+
     async function loadPortfolio() {
         try {
             const response = await fetch('/api/portfolio');
@@ -145,7 +209,7 @@
             updateWalletMetrics(data.wallet, data.metrics);
             updatePositionsTable(data.positions);
             await loadCharts();
-            
+            await loadFearGreedIndex();  
             document.getElementById('loading').classList.add('hidden');
             document.getElementById('dashboard').classList.remove('hidden');
             document.getElementById('lastUpdated').textContent = new Date().toLocaleTimeString();
@@ -208,6 +272,7 @@
             const row = document.createElement('tr');
             const isLong = pos.active_pos > 0;
             const pnlPositive = pos.pnl >= 0;
+            const liquidationRisk = calculateLiquidationRisk(pos.current_price, pos.liquidation_price || 0);
             
             row.className = `hover:bg-white/5 transition-colors animate-slide-up`;
             row.style.animationDelay = `${index * 50}ms`;
@@ -234,6 +299,34 @@
                 </td>
                 <td class="py-4 px-4 text-right text-gray-300">
                     $${pos.current_price.toLocaleString(undefined, {minimumFractionDigits: 2})}
+                </td>
+                <td class="py-4 px-4 text-right">
+                    ${pos.liquidation_price && pos.liquidation_price > 0 ? 
+                        `<div>
+                            <span class="text-gray-300">${pos.liquidation_price.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
+                            <div class="text-xs font-medium mt-1 ${
+                                liquidationRisk.level === 'high' ? 'text-crypto-red' :
+                                liquidationRisk.level === 'medium' ? 'text-yellow-400' : 'text-crypto-green'
+                            }">${liquidationRisk.text}</div>
+                        </div>` : 
+                        '<span class="text-gray-500 text-sm">Cross</span>'
+                    }
+                </td>
+                <td class="py-4 px-4 text-right">
+                    <div class="space-y-1">
+                        ${pos.stop_loss_trigger ? 
+                            `<div class="text-xs"><span class="text-crypto-red">SL:</span> <span class="text-gray-300">${pos.stop_loss_trigger.toLocaleString(undefined, {minimumFractionDigits: 2})}</span></div>` : 
+                            ''
+                        }
+                        ${pos.take_profit_trigger ? 
+                            `<div class="text-xs"><span class="text-crypto-green">TP:</span> <span class="text-gray-300">${pos.take_profit_trigger.toLocaleString(undefined, {minimumFractionDigits: 2})}</span></div>` : 
+                            ''
+                        }
+                        ${!pos.stop_loss_trigger && !pos.take_profit_trigger ? 
+                            '<span class="text-gray-500 text-sm">-</span>' : 
+                            ''
+                        }
+                    </div>
                 </td>
                 <td class="py-4 px-4 text-right font-bold ${pnlPositive ? 'text-crypto-green' : 'text-crypto-red'}">
                     $${pos.pnl.toLocaleString(undefined, {minimumFractionDigits: 2})}
@@ -262,7 +355,7 @@
         if (positions.length === 0) {
             tbody.innerHTML = `
                 <tr>
-                    <td colspan="10" class="py-12 text-center text-gray-400">
+                    <td colspan="12" class="py-12 text-center text-gray-400">
                         <div class="flex flex-col items-center">
                             <svg class="w-12 h-12 mb-4 opacity-50" fill="currentColor" viewBox="0 0 24 24">
                                 <path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M11,16.5L6.5,12L7.91,10.59L11,13.67L16.59,8.09L18,9.5L11,16.5Z"/>
@@ -334,6 +427,7 @@
     });
     
     loadPortfolio();
+    
     startAutoRefresh();
 </script>
 {% endblock %}

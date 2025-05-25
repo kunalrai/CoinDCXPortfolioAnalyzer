@@ -111,7 +111,7 @@ class FuturesPortfolioAnalyzer:
         price_data = self.api.get_current_prices()
         if price_data and 'prices' in price_data:
             for pair, data in price_data['prices'].items():
-                if 'ls' in data:  # last price
+                if 'ls' in data:
                     self.current_prices[pair] = float(data['ls'])
     
     def get_portfolio_data(self):
@@ -143,7 +143,10 @@ class FuturesPortfolioAnalyzer:
                     'pnl_percent': 4.44,
                     'locked_margin': 4500,
                     'leverage': 10,
-                    'margin_type': 'crossed'
+                    'margin_type': 'crossed',
+                    'liquidation_price': 41000,
+                    'stop_loss_trigger': 42000,
+                    'take_profit_trigger': 50000
                 },
                 {
                     'pair': 'B-ETH_USDT',
@@ -154,7 +157,10 @@ class FuturesPortfolioAnalyzer:
                     'pnl_percent': 1.67,
                     'locked_margin': 600,
                     'leverage': 10,
-                    'margin_type': 'isolated'
+                    'margin_type': 'isolated',
+                    'liquidation_price': 3300,
+                    'stop_loss_trigger': None,
+                    'take_profit_trigger': 2800
                 }
             ],
             'wallet': {
@@ -173,6 +179,34 @@ class FuturesPortfolioAnalyzer:
             }
         }
     
+    def _calculate_liquidation_price(self, position, current_price):
+        try:
+            active_pos = float(position.get('active_pos', 0))
+            avg_price = float(position.get('avg_price', 0))
+            leverage = float(position.get('leverage', 1))
+            locked_margin = float(position.get('locked_margin', 0))
+            margin_type = position.get('margin_type', 'isolated')
+            
+            if active_pos == 0 or avg_price == 0:
+                return 0
+            
+            if margin_type == 'isolated':
+                if position.get('liquidation_price'):
+                    return float(position.get('liquidation_price', 0))
+                
+                maintenance_margin_rate = 0.005
+                
+                if active_pos > 0:
+                    liquidation_price = avg_price * (1 - (1/leverage) + maintenance_margin_rate)
+                else:
+                    liquidation_price = avg_price * (1 + (1/leverage) - maintenance_margin_rate)
+                
+                return max(0, liquidation_price)
+            else:
+                return 0
+        except:
+            return 0
+    
     def _process_futures_data(self, positions, wallet):
         portfolio = {
             'positions': [],
@@ -180,7 +214,6 @@ class FuturesPortfolioAnalyzer:
             'metrics': {}
         }
         
-        # Process positions
         active_positions = [p for p in positions if p.get('active_pos', 0) != 0]
         total_pnl = 0
         long_count = 0
@@ -192,16 +225,17 @@ class FuturesPortfolioAnalyzer:
             avg_price = float(pos.get('avg_price', 0))
             current_price = self._get_current_price(pair)
             
-            # Calculate PnL
-            if active_pos > 0:  # Long position
+            if active_pos > 0:
                 pnl = active_pos * (current_price - avg_price)
                 long_count += 1
-            else:  # Short position
+            else:
                 pnl = abs(active_pos) * (avg_price - current_price)
                 short_count += 1
             
             pnl_percent = (pnl / (abs(active_pos) * avg_price) * 100) if avg_price > 0 else 0
             total_pnl += pnl
+            
+            liquidation_price = self._calculate_liquidation_price(pos, current_price)
             
             portfolio['positions'].append({
                 'pair': pair,
@@ -212,10 +246,12 @@ class FuturesPortfolioAnalyzer:
                 'pnl_percent': pnl_percent,
                 'locked_margin': float(pos.get('locked_margin', 0)),
                 'leverage': float(pos.get('leverage', 1)),
-                'margin_type': pos.get('margin_type', 'isolated')
+                'margin_type': pos.get('margin_type', 'isolated'),
+                'liquidation_price': liquidation_price,
+                'stop_loss_trigger': float(pos.get('stop_loss_trigger', 0)) if pos.get('stop_loss_trigger') else None,
+                'take_profit_trigger': float(pos.get('take_profit_trigger', 0)) if pos.get('take_profit_trigger') else None
             })
         
-        # Process wallet
         wallet_balance = 0
         available_balance = 0
         if wallet and len(wallet) > 0:
@@ -227,10 +263,9 @@ class FuturesPortfolioAnalyzer:
             'total_balance': wallet_balance,
             'available_balance': available_balance,
             'total_pnl': total_pnl,
-            'margin_ratio': 0  # This would need cross margin details API
+            'margin_ratio': 0
         }
         
-        # Calculate metrics
         portfolio['metrics'] = {
             'total_positions': len(active_positions),
             'long_positions': long_count,
@@ -256,6 +291,21 @@ analyzer = FuturesPortfolioAnalyzer(
 def dashboard():
     return render_template('dashboard.html')
 
+@app.route('/api/fear-greed')
+def get_fear_greed_index():
+    try:
+        response = requests.get("https://api.alternative.me/fng/")
+        data = response.json()
+        index_data = data['data'][0]
+        return jsonify({
+            'value': int(index_data['value']),
+            'classification': index_data['value_classification'],
+            'timestamp': int(index_data['timestamp'])
+        })
+    except Exception as e:
+        print(f"Fear & Greed API Error: {e}")
+        return jsonify({'error': 'Failed to fetch index'}), 500
+
 @app.route('/api/portfolio')
 def get_portfolio():
     try:
@@ -270,7 +320,6 @@ def get_charts():
     try:
         data = analyzer.get_portfolio_data()
         
-        # PnL by position chart
         pnl_fig = go.Figure(data=[
             go.Bar(
                 x=[p['pair'].replace('B-', '') for p in data['positions']],
@@ -282,7 +331,6 @@ def get_charts():
         ])
         pnl_fig.update_layout(title="PnL by Position", yaxis_title="PnL (USDT)")
         
-        # Position size chart
         size_fig = go.Figure(data=[
             go.Bar(
                 x=[p['pair'].replace('B-', '') for p in data['positions']],
