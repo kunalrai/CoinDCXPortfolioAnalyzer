@@ -56,12 +56,14 @@
     </style>
     {% block head %}{% endblock %}
 </head>
-<body class="bg-gradient-to-br from-dark-900 via-dark-800 to-dark-700 text-white min-h-screen">
+<body class="bg-gradient-to-br from-dark-900 via-dark-800 to-dark-700 text-white min-h-screen flex flex-col">
     {% include 'nav.html' %}
     
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {% block content %}{% endblock %}
-    </main>
+    <div class="flex-1 w-full">
+        <main class="container max-w-[90%] 2xl:max-w-[1920px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            {% block content %}{% endblock %}
+        </main>
+    </div>
     
     {% include 'footer.html' %}
     

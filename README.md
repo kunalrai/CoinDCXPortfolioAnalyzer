@@ -1,53 +1,57 @@
 # CoinDCX Portfolio Analyzer
 
-![image](https://github.com/user-attachments/assets/310efa60-6ef0-4ac0-a02a-eea5f78c627c)
+![Dashboard Screenshot](https://github.com/user-attachments/assets/310efa60-6ef0-4ac0-a02a-eea5f78c627c)
 
+A powerful web-based tool for analyzing and managing your CoinDCX futures trading portfolio. Get real-time insights, performance analytics, and risk management features—all in one dashboard.
 
-A comprehensive web-based portfolio analyzer for CoinDCX futures trading. This application provides real-time portfolio tracking, P&L analysis, position monitoring, and risk management tools for futures traders.
+---
 
-## Features
+## 🚀 Features
 
-### 📊 Portfolio Analytics
-- **Real-time Position Tracking**: Monitor all active futures positions with live P&L calculations
-- **Portfolio Overview**: Get a comprehensive view of your trading portfolio with key metrics
-- **Performance Analytics**: Track best and worst performing positions
-- **Interactive Charts**: Visualize P&L and position sizes with dynamic charts
+### Portfolio Analytics
+- **Live Position Tracking:** Monitor all open futures positions with up-to-date P&L
+- **Comprehensive Overview:** View key portfolio metrics and performance highlights
+- **Performance Insights:** Identify your best and worst trades
+- **Interactive Charts:** Visualize P&L and position sizes with dynamic Plotly.js charts
 
-### 💰 Financial Metrics
-- **P&L Calculation**: Real-time profit and loss tracking for all positions
-- **Margin Analysis**: Monitor locked margins and available balance
-- **Liquidation Price Calculation**: Automatic calculation of liquidation prices for risk management
-- **Portfolio Balance**: Track total balance, available balance, and margin utilization
+### Financial Metrics
+- **Real-Time P&L:** Track profit and loss for every position
+- **Margin Monitoring:** See locked/available margin and utilization
+- **Liquidation Price Calculation:** Automatic risk assessment for each position
+- **Balance Overview:** Total, available, and margin balances at a glance
 
-### 📈 Market Data Integration
-- **Live Price Updates**: Real-time price feeds from CoinDCX
-- **Fear & Greed Index**: Market sentiment indicator integration
-- **Multi-timeframe Analysis**: Support for various trading timeframes
+### Market Data Integration
+- **Live Price Feeds:** Real-time data from CoinDCX
+- **Fear & Greed Index:** Integrated market sentiment indicator
+- **Multi-Timeframe Support:** Analyze positions across different timeframes
 
-### 🛡️ Risk Management
-- **Stop Loss Monitoring**: Track stop loss levels for all positions
-- **Take Profit Tracking**: Monitor take profit targets
-- **Leverage Analysis**: View leverage ratios for each position
-- **Margin Type Support**: Both isolated and cross margin support
+### Risk Management
+- **Stop Loss & Take Profit:** Monitor risk management levels for all trades
+- **Leverage Analysis:** View leverage ratios and margin types (isolated/cross)
+- **Position Sizing:** Assess exposure and risk per trade
 
-## Technology Stack
+---
 
-- **Backend**: Flask (Python)
-- **Frontend**: HTML5, CSS3, JavaScript
-- **Charts**: Plotly.js for interactive visualizations
-- **API Integration**: CoinDCX Futures API
-- **Environment Management**: python-dotenv
-- **HTTP Requests**: requests library
-- **Data Processing**: pandas
+## 🛠️ Technology Stack
 
-## Installation
+- **Backend:** Python (Flask)
+- **Frontend:** HTML5, CSS3, JavaScript
+- **Charts:** Plotly.js
+- **API Integration:** CoinDCX Futures API
+- **Environment:** python-dotenv
+- **HTTP Requests:** requests
+- **Data Processing:** pandas
+
+---
+
+## ⚡ Getting Started
 
 ### Prerequisites
-- Python 3.7 or higher
+- Python 3.7+
 - CoinDCX account with API access
-- Git (for cloning the repository)
+- Git
 
-### Setup Instructions
+### Installation
 
 1. **Clone the repository**
    ```bash
@@ -55,15 +59,12 @@ A comprehensive web-based portfolio analyzer for CoinDCX futures trading. This a
    cd CoinDCXPortfolioAnalyzer
    ```
 
-2. **Create a virtual environment**
+2. **Create and activate a virtual environment**
    ```bash
    python -m venv venv
-   
-   # On Windows
-   venv\Scripts\activate
-   
-   # On macOS/Linux
-   source venv/bin/activate
+   venv\Scripts\activate  # On Windows
+   # or
+   source venv/bin/activate  # On macOS/Linux
    ```
 
 3. **Install dependencies**
@@ -72,11 +73,14 @@ A comprehensive web-based portfolio analyzer for CoinDCX futures trading. This a
    ```
 
 4. **Configure environment variables**
-   
-   Create a `.env` file in the root directory:
-   ```env
+   Create a `.env` file:
+   ```
    COINDCX_API_KEY=your_api_key_here
    COINDCX_API_SECRET=your_api_secret_here
+   SUPABASE_URL=url
+   SUPABASE_ANON_KEY=anon_key
+   SECRET_KEY=key
+
    ```
 
 5. **Run the application**
@@ -84,169 +88,156 @@ A comprehensive web-based portfolio analyzer for CoinDCX futures trading. This a
    python app.py
    ```
 
-6. **Access the dashboard**
-   
-   Open your browser and navigate to: `http://127.0.0.1:5000`
+6. **Open the dashboard**
+   Visit [http://127.0.0.1:5000](http://127.0.0.1:5000)
 
-## API Configuration
+---
 
-### Getting CoinDCX API Credentials
+## 🔑 API Setup
 
 1. Log in to your CoinDCX account
-2. Navigate to API Management section
-3. Create a new API key with futures trading permissions
-4. Copy the API Key and Secret
-5. Add them to your `.env` file
+2. Navigate to API Management
+3. Create new API key with futures trading permissions
+4. Copy API Key and Secret
+5. Add to your `.env` file
 
-### API Permissions Required
-- **Futures Trading**: Read access to positions, orders, and trades
-- **Wallet Access**: Read access to futures wallet balance
-- **Market Data**: Access to real-time price feeds
+Required permissions:
+- **Futures Trading:** Read positions, orders, trades
+- **Wallet Access:** Read futures wallet balance
+- **Market Data:** Real-time price feeds
 
-## Usage
+---
+
+## 🖥️ Usage
 
 ### Dashboard Overview
-The main dashboard provides:
-- **Portfolio Summary**: Total balance, P&L, and key metrics
-- **Active Positions**: List of all open futures positions
-- **Performance Charts**: Visual representation of P&L and position sizes
-- **Risk Metrics**: Liquidation prices and margin utilization
+- Portfolio summary and key metrics
+- Active positions and P&L
+- Performance charts
+- Risk management metrics
 
 ### API Endpoints
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| `/` | GET | Main dashboard page |
-| `/api/portfolio` | GET | Get portfolio data and positions |
-| `/api/charts` | GET | Get chart data for visualizations |
-| `/api/fear-greed` | GET | Get Fear & Greed index data |
-| `/health` | GET | Health check and API status |
+| `/` | GET | Main dashboard |
+| `/api/portfolio` | GET | Portfolio data |
+| `/api/charts` | GET | Chart data |
+| `/api/fear-greed` | GET | Fear & Greed index |
+| `/health` | GET | Health check |
 
 ### Demo Mode
-If API credentials are not configured, the application runs in demo mode with sample data for testing and development purposes.
+Available when running without API credentials.
 
-## Project Structure
+---
+
+## 📁 Project Structure
 
 ```
 CoinDCXPortfolioAnalyzer/
-├── app.py                 # Main Flask application
-├── requirements.txt       # Python dependencies
-├── .env                  # Environment variables (create this)
-├── .gitignore           # Git ignore rules
-├── README.md            # Project documentation
-└── templates/           # HTML templates
-    ├── base.html        # Base template
-    ├── header.html      # Header component
-    ├── footer.html      # Footer component
-    ├── dashboard.html   # Main dashboard
-    └── futures_dashboard.html # Futures-specific dashboard
+├── app.py
+├── requirements.txt
+├── .env
+├── .gitignore
+├── README.md
+└── templates/
+    ├── base.html
+    ├── header.html
+    ├── footer.html
+    ├── dashboard.html
+    └── futures_dashboard.html
 ```
 
-## Key Classes and Components
+---
 
-### `CoinDCXFuturesAPI`
-Handles all API communications with CoinDCX:
-- Authentication and signature generation
+## 🧩 Core Components
+
+### CoinDCXFuturesAPI
+- API authentication
 - Position and order management
-- Real-time price data fetching
-- Error handling and retry logic
+- Price data fetching
+- Error handling
 
-### `FuturesPortfolioAnalyzer`
-Core analytics engine:
-- Portfolio data processing
+### FuturesPortfolioAnalyzer
+- Portfolio processing
 - P&L calculations
-- Risk metric computations
+- Risk metrics
 - Demo data generation
 
-## Features in Detail
+---
 
-### Position Tracking
-- **Long/Short Positions**: Support for both long and short futures positions
-- **Average Price Tracking**: Monitor entry prices and current market prices
-- **Size Monitoring**: Track position sizes and exposure
-- **Leverage Analysis**: View leverage ratios for risk assessment
+## 🏗️ Development
 
-### Risk Management Tools
-- **Liquidation Price Calculation**: Automatic calculation based on margin type
-- **Stop Loss/Take Profit**: Monitor risk management orders
-- **Margin Utilization**: Track margin usage and available balance
-- **Position Sizing**: Analyze position sizes relative to portfolio
-
-### Performance Analytics
-- **Real-time P&L**: Live profit and loss calculations
-- **Percentage Returns**: Performance metrics as percentages
-- **Best/Worst Performers**: Identify top and bottom performing positions
-- **Portfolio Metrics**: Comprehensive portfolio statistics
-
-## Development
-
-### Running in Development Mode
+Development mode:
 ```bash
 python app.py
 ```
-The application will start with debug mode enabled on `http://127.0.0.1:5000`
 
-### Production Deployment
-For production deployment, use a WSGI server like Gunicorn:
+Production deployment:
 ```bash
 gunicorn -w 4 -b 0.0.0.0:8000 app:app
 ```
 
-## Security Considerations
+---
 
-- **API Credentials**: Never commit API keys to version control
-- **Environment Variables**: Use `.env` file for sensitive configuration
-- **HTTPS**: Use HTTPS in production environments
-- **Rate Limiting**: Be mindful of API rate limits
+## 🔒 Security Best Practices
 
-## Troubleshooting
-
-### Common Issues
-
-1. **API Authentication Errors**
-   - Verify API key and secret are correct
-   - Check API permissions on CoinDCX
-   - Ensure timestamp synchronization
-
-2. **Connection Issues**
-   - Check internet connectivity
-   - Verify CoinDCX API status
-   - Review firewall settings
-
-3. **Data Loading Problems**
-   - Check API rate limits
-   - Verify account has futures positions
-   - Review error logs in console
-
-### Error Handling
-The application includes comprehensive error handling:
-- API failures gracefully fall back to demo mode
-- Network timeouts are handled with appropriate retries
-- Invalid data is filtered and logged
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/new-feature`)
-3. Commit your changes (`git commit -am 'Add new feature'`)
-4. Push to the branch (`git push origin feature/new-feature`)
-5. Create a Pull Request
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## Disclaimer
-
-This tool is for educational and informational purposes only. Trading futures involves substantial risk and may not be suitable for all investors. Past performance is not indicative of future results. Always conduct your own research and consider consulting with a financial advisor before making trading decisions.
-
-## Support
-
-For support and questions:
-- Create an issue on GitHub
-- Check the troubleshooting section
-- Review CoinDCX API documentation
+- Never commit API keys
+- Use `.env` for configuration
+- Enable HTTPS in production
+- Monitor API rate limits
 
 ---
 
-**Note**: This application requires valid CoinDCX API credentials for live data. Demo mode is available for testing without API access.
+## 🛠️ Troubleshooting
+
+Common issues and solutions:
+
+1. **API Authentication**
+   - Check credentials
+   - Verify permissions
+   - Check system time
+
+2. **Connection Issues**
+   - Check internet
+   - Verify API status
+   - Check firewall
+
+3. **Data Problems**
+   - Monitor rate limits
+   - Check account status
+   - Review error logs
+
+---
+
+## 🤝 Contributing
+
+1. Fork the repo
+2. Create feature branch
+3. Commit changes
+4. Push to branch
+5. Create Pull Request
+
+---
+
+## 📄 License
+
+MIT License - see LICENSE file
+
+---
+
+## ⚠️ Disclaimer
+
+This tool is for educational purposes only. Futures trading carries significant risk. Always conduct proper research and consult financial advisors before trading.
+
+---
+
+## 💬 Support
+
+- Open GitHub issues
+- Check troubleshooting
+- Review API docs
+
+---
+
+**Note**: Requires valid CoinDCX API credentials for live data. Demo mode available for testing.
