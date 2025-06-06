@@ -6,12 +6,14 @@
     <div class="relative">
         <div class="w-16 h-16 border-4 border-crypto-green/30 border-t-crypto-green rounded-full animate-spin"></div>
         <div class="absolute inset-0 w-16 h-16 border-4 border-transparent border-b-crypto-blue rounded-full animate-spin animation-delay-75"></div>
-    </div>
-    <p class="mt-6 text-gray-400 text-lg">Loading futures data...</p>
-    <div class="mt-2 flex space-x-1">
-        <div class="w-2 h-2 bg-crypto-green rounded-full animate-bounce"></div>
-        <div class="w-2 h-2 bg-crypto-blue rounded-full animate-bounce animation-delay-100"></div>
-        <div class="w-2 h-2 bg-crypto-purple rounded-full animate-bounce animation-delay-200"></div>
+    </div>    <p id="loadingText" class="mt-6 text-gray-400 text-lg">Loading data...</p>
+    <div class="mt-2 flex flex-col items-center space-y-3">
+        <div class="flex space-x-1">
+            <div class="w-2 h-2 bg-crypto-green rounded-full animate-bounce"></div>
+            <div class="w-2 h-2 bg-crypto-blue rounded-full animate-bounce animation-delay-100"></div>
+            <div class="w-2 h-2 bg-crypto-purple rounded-full animate-bounce animation-delay-200"></div>
+        </div>
+        <div class="text-sm text-gray-500">Components will appear as they load</div>
     </div>
 </div>
 
@@ -90,18 +92,9 @@
                 </div>
             </div>
         </div>
-    </div>
-
-    <!-- Charts -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        <div class="chart-container rounded-2xl p-6">
-            <h3 class="text-lg font-semibold mb-4 text-white">PnL Distribution</h3>
-            <div id="pnlChart" class="h-80"></div>
-        </div>
-        <div class="chart-container rounded-2xl p-6">
-            <h3 class="text-lg font-semibold mb-4 text-white">Position Overview</h3>
-            <div id="positionsChart" class="h-80"></div>
-        </div>
+    </div>    <!-- Individual Position Charts -->
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mb-8" id="individualCharts">
+        <!-- Charts will be dynamically inserted here -->
     </div>
 
     <!-- Positions Table -->
@@ -141,10 +134,42 @@
 {% endblock %}
 
 {% block scripts %}
-<script>
-    let refreshInterval;
+<script>    let refreshInterval;
     let retryCount = 0;
     const MAX_RETRIES = 3;
+    const LOADING_STAGES = {
+        WALLET: 'wallet',
+        POSITIONS: 'positions',
+        CHARTS: 'charts',
+        FEAR_GREED: 'fear_greed'
+    };
+    
+    const loadingStates = new Map();
+    for (const stage of Object.values(LOADING_STAGES)) {
+        loadingStates.set(stage, { loaded: false, error: null });
+    }
+
+    function updateLoadingUI() {
+        const loadingEl = document.getElementById('loading');
+        const loadingText = document.getElementById('loadingText');
+        
+        const totalStages = Object.keys(LOADING_STAGES).length;
+        const loadedStages = Array.from(loadingStates.values()).filter(state => state.loaded).length;
+        
+        if (loadedStages === totalStages) {
+            loadingEl.classList.add('hidden');
+            document.getElementById('dashboard').classList.remove('hidden');
+            return;
+        }
+        
+        // Show which components are loading
+        const pending = Object.entries(LOADING_STAGES)
+            .filter(([_, stage]) => !loadingStates.get(stage).loaded)
+            .map(([key, _]) => key.toLowerCase())
+            .join(', ');
+            
+        loadingText.textContent = `Loading ${pending}...`;
+    }
 
     function calculateLiquidationRisk(currentPrice, liquidationPrice) {
         if (!liquidationPrice || liquidationPrice === 0) return { level: 'low', text: 'N/A' };
@@ -190,31 +215,57 @@
             document.getElementById('fearGreedLabel').textContent = 'Unavailable';
             document.getElementById('sellSignalText').classList.add('hidden');
         }
-    }
+    }    async function loadPortfolio() {
+        // Reset all loading states
+        for (const stage of Object.values(LOADING_STAGES)) {
+            loadingStates.set(stage, { loaded: false, error: null });
+        }
+        updateLoadingUI();
 
-    async function loadPortfolio() {
+        // Load wallet and positions data
         try {
             const response = await fetch('/api/portfolio');
-            
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-            }
+            if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             
             const data = await response.json();
+            if (data.error) throw new Error('API Error: ' + data.error);
             
-            if (data.error) {
-                throw new Error('API Error: ' + data.error);
-            }
-            
+            // Update wallet metrics immediately
             updateWalletMetrics(data.wallet, data.metrics);
-            updatePositionsTable(data.positions);
-            await loadCharts();
-            await loadFearGreedIndex();  
-            document.getElementById('loading').classList.add('hidden');
-            document.getElementById('dashboard').classList.remove('hidden');
-            document.getElementById('lastUpdated').textContent = new Date().toLocaleTimeString();
+            loadingStates.set(LOADING_STAGES.WALLET, { loaded: true, error: null });
+            updateLoadingUI();
             
+            // Update positions table next
+            updatePositionsTable(data.positions);
+            loadingStates.set(LOADING_STAGES.POSITIONS, { loaded: true, error: null });
+            updateLoadingUI();
+
+            // Show the dashboard as soon as basic data is loaded
+            document.getElementById('dashboard').classList.remove('hidden');
+            
+            // Load charts in the background
+            loadCharts().then(() => {
+                loadingStates.set(LOADING_STAGES.CHARTS, { loaded: true, error: null });
+                updateLoadingUI();
+            }).catch(err => {
+                loadingStates.set(LOADING_STAGES.CHARTS, { loaded: false, error: err });
+                console.warn('Charts failed to load:', err);
+                updateLoadingUI();
+            });
+            
+            // Load Fear & Greed index in parallel
+            loadFearGreedIndex().then(() => {
+                loadingStates.set(LOADING_STAGES.FEAR_GREED, { loaded: true, error: null });
+                updateLoadingUI();
+            }).catch(err => {
+                loadingStates.set(LOADING_STAGES.FEAR_GREED, { loaded: false, error: err });
+                console.warn('Fear & Greed index failed to load:', err);
+                updateLoadingUI();
+            });
+
+            document.getElementById('lastUpdated').textContent = new Date().toLocaleTimeString();
             retryCount = 0;
+            
         } catch (error) {
             console.error('Portfolio load error:', error);
             
@@ -366,68 +417,332 @@
                 </tr>
             `;
         }
+    }    // Global chart configuration and instances
+    const chartConfig = {
+        displayModeBar: false,
+        responsive: true,
+        paper_bgcolor: 'rgba(0,0,0,0)',
+        plot_bgcolor: 'rgba(0,0,0,0)',
+        font: { color: '#ffffff', family: 'system-ui' }
+    };
+
+    // Store active charts and their data
+    const activeCharts = new Map();
+    let priceUpdateInterval;
+
+    // Update price data for a specific chart
+    async function updateChartPrice(pair, newPrice, historicalPrices) {
+        const chartData = activeCharts.get(pair);
+        if (!chartData) return;
+
+        // Update price history with the new data
+        chartData.prices = historicalPrices || [...chartData.prices.slice(1), newPrice];
+        chartData.high = Math.max(...chartData.prices);
+        chartData.low = Math.min(...chartData.prices);
+
+        // Update chart
+        const chart = document.getElementById(`chart-${pair}`);
+        if (!chart) return;
+
+        try {
+            await Plotly.update(chart, {
+                y: [chartData.prices]
+            });
+
+            // Update price display
+            const priceDisplay = document.querySelector(`#chart-${pair}-price`);
+            if (priceDisplay) {
+                const priceChange = ((newPrice - chartData.prices[0]) / chartData.prices[0]) * 100;
+                priceDisplay.innerHTML = `
+                    <div class="price-info flex items-center justify-between mt-4">
+                        <div>
+                            <span class="text-white font-medium">$${newPrice.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
+                            <span class="ml-2 ${priceChange >= 0 ? 'text-crypto-green' : 'text-crypto-red'}">
+                                ${priceChange >= 0 ? '▲' : '▼'} ${Math.abs(priceChange).toFixed(2)}%
+                            </span>
+                        </div>
+                        <div class="text-sm">
+                            <span class="text-gray-400">H:</span>
+                            <span class="text-crypto-green">$${chartData.high.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
+                            <span class="text-gray-400 ml-2">L:</span>
+                            <span class="text-crypto-red">$${chartData.low.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
+                        </div>
+                    </div>
+                `;
+            }
+        } catch (error) {
+            console.warn('Chart update failed:', error);
+        }
     }
-    
+
+    // Fetch current prices for all active pairs
+    async function fetchCurrentPrices() {
+        try {
+            const activePairs = Array.from(activeCharts.keys());
+            if (activePairs.length === 0) return;
+
+            const response = await fetch('/api/current-prices', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ pairs: activePairs })
+            });
+
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            const data = await response.json();
+
+            // Update each chart with new price data
+            for (const [pair, priceData] of Object.entries(data)) {
+                if (priceData.current && activeCharts.has(pair)) {
+                    updateChartPrice(pair, priceData.current, priceData.historical);
+                }
+            }
+        } catch (error) {
+            console.warn('Failed to fetch current prices:', error);
+        }
+    }
+
+    // Create and initialize a single chart
+    async function createChart(container, pair, data, isLong) {
+        const chartDiv = document.createElement('div');
+        chartDiv.className = 'chart-container rounded-2xl p-6';
+        
+        // Create chart header
+        const header = document.createElement('div');
+        header.className = 'flex items-center justify-between mb-4';
+        header.innerHTML = `
+            <h3 class="text-lg font-semibold text-white">${pair}</h3>
+            <span class="px-3 py-1 rounded-full text-xs font-medium ${
+                isLong ? 'bg-crypto-blue/20 text-crypto-blue' : 'bg-orange-500/20 text-orange-400'
+            }">${isLong ? 'LONG' : 'SHORT'}</span>
+        `;
+        
+        // Create chart placeholder
+        const plotDiv = document.createElement('div');
+        plotDiv.className = 'h-80';
+        plotDiv.id = `chart-${pair}`;
+        
+        // Create price display
+        const priceDisplay = document.createElement('div');
+        priceDisplay.id = `chart-${pair}-price`;
+        
+        chartDiv.appendChild(header);
+        chartDiv.appendChild(plotDiv);
+        chartDiv.appendChild(priceDisplay);
+        container.appendChild(chartDiv);
+
+        try {
+            // Fetch historical prices from the local database
+            const historyResponse = await fetch(`/api/price-history/${pair}`);
+            if (!historyResponse.ok) throw new Error(`HTTP ${historyResponse.status}`);
+            const historyData = await historyResponse.json();
+
+            // Initialize price data with historical values
+            const prices = historyData.prices || Array(96).fill(data.current);
+            activeCharts.set(pair, {
+                prices,
+                high: Math.max(...prices),
+                low: Math.min(...prices)
+            });
+
+            // Create the chart
+            const times = Array.from({length: 96}, (_, i) => {
+                const now = new Date();
+                return new Date(now - (95 - i) * 15 * 60000);
+            });
+
+            const traces = [{
+                x: times,
+                y: prices,
+                name: 'Price',
+                type: 'scatter',
+                line: { color: '#ffffff', width: 2 }
+            }];
+
+            // Add entry, liquidation, stop loss, and take profit lines
+            if (data.entry) {
+                traces.push({
+                    x: [times[0], times[times.length - 1]],
+                    y: [data.entry, data.entry],
+                    name: 'Entry',
+                    type: 'scatter',
+                    line: { color: '#3742FA', width: 1, dash: 'dot' }
+                });
+            }
+
+            if (data.liquidation) {
+                traces.push({
+                    x: [times[0], times[times.length - 1]],
+                    y: [data.liquidation, data.liquidation],
+                    name: 'Liquidation',
+                    type: 'scatter',
+                    line: { color: '#FF4757', width: 1, dash: 'dot' }
+                });
+            }
+
+            if (data.stopLoss) {
+                traces.push({
+                    x: [times[0], times[times.length - 1]],
+                    y: [data.stopLoss, data.stopLoss],
+                    name: 'Stop Loss',
+                    type: 'scatter',
+                    line: { color: '#FF4757', width: 1, dash: 'dash' }
+                });
+            }
+
+            if (data.takeProfit) {
+                traces.push({
+                    x: [times[0], times[times.length - 1]],
+                    y: [data.takeProfit, data.takeProfit],
+                    name: 'Take Profit',
+                    type: 'scatter',
+                    line: { color: '#00D4AA', width: 1, dash: 'dash' }
+                });
+            }
+
+            const layout = {
+                ...chartConfig,
+                height: 320,
+                margin: { t: 20, r: 10, l: 50, b: 30 },
+                showlegend: true,
+                legend: {
+                    orientation: 'h',
+                    y: -0.2,
+                    x: 0.5,
+                    xanchor: 'center',
+                    bgcolor: 'rgba(0,0,0,0.3)',
+                    font: { color: '#ffffff' }
+                },
+                yaxis: {
+                    gridcolor: 'rgba(255,255,255,0.1)',
+                    tickformat: ',.2f',
+                    side: 'left',
+                    autorange: true
+                },
+                xaxis: {
+                    gridcolor: 'rgba(255,255,255,0.1)',
+                    type: 'date',
+                    tickformat: '%H:%M',
+                    showgrid: true
+                },
+                dragmode: 'pan',
+                hovermode: 'x unified'
+            };
+
+            await Plotly.newPlot(`chart-${pair}`, traces, layout, { 
+                displayModeBar: false,
+                responsive: true 
+            });
+
+            // Update initial price display
+            updateChartPrice(pair, data.current, prices);
+
+        } catch (error) {
+            console.warn(`Failed to initialize chart for ${pair}:`, error);
+            chartDiv.innerHTML = `
+                <div class="text-center py-8">
+                    <div class="w-12 h-12 bg-crypto-red/20 rounded-full mx-auto mb-4 flex items-center justify-center">
+                        <svg class="w-6 h-6 text-crypto-red" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12,2C17.53,2 22,6.47 22,12C22,17.53 17.53,22 12,22C6.47,22 2,17.53 2,12C2,6.47 6.47,2 12,2M15.59,7L12,10.59L8.41,7L7,8.41L10.59,12L7,15.59L8.41,17L12,13.41L15.59,17L17,15.59L13.41,12L17,8.41L15.59,7Z"/>
+                        </svg>
+                    </div>
+                    <p class="text-gray-400">Failed to load chart</p>
+                </div>
+            `;
+        }
+    }
+
+    // Modified loadCharts function
     async function loadCharts() {
+        const chartsContainer = document.getElementById('individualCharts');
+        chartsContainer.innerHTML = '<div class="col-span-full text-center"><div class="w-10 h-10 border-4 border-crypto-green/30 border-t-crypto-green rounded-full animate-spin mx-auto"></div><p class="mt-4 text-gray-400">Loading charts...</p></div>';
+        
+        // Clear existing update interval if any
+        if (priceUpdateInterval) {
+            clearInterval(priceUpdateInterval);
+            priceUpdateInterval = null;
+        }
+
+        // Clear existing charts
+        activeCharts.clear();
+            
         try {
             const response = await fetch('/api/charts');
-            
-            if (!response.ok) {
-                console.warn('Charts API failed:', response.status);
-                return;
-            }
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
             
             const charts = await response.json();
+            if (!charts || charts.error) throw new Error(charts?.error || 'No data');
+
+            // Clear loading state
+            chartsContainer.innerHTML = '';
+
+            // Create charts in batches of 3 for better performance
+            const pairs = charts.positions.data[0].x;
+            const BATCH_SIZE = 3;
             
-            if (charts.error) {
-                console.warn('Chart error:', charts.error);
-                return;
+            for (let i = 0; i < pairs.length; i += BATCH_SIZE) {
+                const batchPairs = pairs.slice(i, i + BATCH_SIZE);
+                const batchPromises = batchPairs.map((pair, idx) => {
+                    const absoluteIndex = i + idx;
+                    const isLong = charts.positions.data[0].text[absoluteIndex] === 'Long';
+                    const chartData = {
+                        current: charts.prices.current[absoluteIndex],
+                        entry: charts.prices.entry[absoluteIndex],
+                        liquidation: charts.prices.liquidation[absoluteIndex],
+                        stopLoss: charts.prices.stopLoss[absoluteIndex],
+                        takeProfit: charts.prices.takeProfit[absoluteIndex]
+                    };
+                    return createChart(chartsContainer, pair, chartData, isLong);
+                });
+
+                // Wait for current batch to complete before moving to next
+                await Promise.all(batchPromises);
             }
-            
-            const chartConfig = {
-                displayModeBar: false,
-                responsive: true,
-                paper_bgcolor: 'rgba(0,0,0,0)',
-                plot_bgcolor: 'rgba(0,0,0,0)',
-                font: { color: '#ffffff', family: 'system-ui' }
-            };
-            
-            Plotly.newPlot('pnlChart', charts.pnl.data, {
-                ...charts.pnl.layout,
-                ...chartConfig
-            }, { displayModeBar: false });
-            
-            Plotly.newPlot('positionsChart', charts.positions.data, {
-                ...charts.positions.layout,
-                ...chartConfig
-            }, { displayModeBar: false });
+
+            // Start periodic price updates
+            priceUpdateInterval = setInterval(fetchCurrentPrices, 15000); // Update every 15 seconds
+
+            // Setup visibility change handler
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'hidden') {
+                    if (priceUpdateInterval) {
+                        clearInterval(priceUpdateInterval);
+                        priceUpdateInterval = null;
+                    }
+                } else {
+                    if (!priceUpdateInterval) {
+                        fetchCurrentPrices(); // Immediate update when becoming visible
+                        priceUpdateInterval = setInterval(fetchCurrentPrices, 15000);
+                    }
+                }
+            });
+
         } catch (error) {
             console.warn('Failed to load charts:', error);
+            chartsContainer.innerHTML = `
+                <div class="col-span-full text-center py-8">
+                    <div class="w-12 h-12 bg-crypto-red/20 rounded-full mx-auto mb-4 flex items-center justify-center">
+                        <svg class="w-6 h-6 text-crypto-red" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12,2C17.53,2 22,6.47 22,12C22,17.53 17.53,22 12,22C6.47,22 2,17.53 2,12C2,6.47 6.47,2 12,2M15.59,7L12,10.59L8.41,7L7,8.41L10.59,12L7,15.59L8.41,17L12,13.41L15.59,17L17,15.59L13.41,12L17,8.41L15.59,7Z"/>
+                        </svg>
+                    </div>
+                    <p class="text-gray-400">Failed to load position charts</p>
+                    <button onclick="retryLoadCharts()" class="mt-4 px-4 py-2 bg-crypto-green/20 hover:bg-crypto-green/30 text-crypto-green rounded-lg transition-colors">
+                        Retry Loading Charts
+                    </button>
+                </div>
+            `;
+            throw error;
         }
     }
-    
-    function startAutoRefresh() {
-        refreshInterval = setInterval(loadPortfolio, 30000);
-    }
-    
-    function stopAutoRefresh() {
-        if (refreshInterval) {
-            clearInterval(refreshInterval);
-            refreshInterval = null;
+
+    async function retryLoadCharts() {
+        try {
+            await loadCharts();
+        } catch (error) {
+            console.error('Retry failed:', error);
         }
     }
-    
-    document.addEventListener('visibilitychange', () => {
-        if (document.hidden) {
-            stopAutoRefresh();
-        } else {
-            startAutoRefresh();
-            loadPortfolio();
-        }
-    });
-    
-    loadPortfolio();
-    
-    startAutoRefresh();
 </script>
 {% endblock %}

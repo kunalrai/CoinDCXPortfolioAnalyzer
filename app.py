@@ -11,6 +11,10 @@ import plotly.express as px
 from plotly.utils import PlotlyJSONEncoder
 from supabase import create_client, Client
 from functools import wraps
+import sqlite3
+from datetime import datetime, timedelta
+import threading
+from typing import Dict, List, Optional
 
 load_dotenv()
 app = Flask(__name__)
@@ -300,6 +304,92 @@ class FuturesPortfolioAnalyzer:
             return self.current_prices[pair]
         return 0
 
+# SQLite database initialization
+def init_db():
+    with sqlite3.connect('price_history.db') as conn:
+        c = conn.cursor()
+        c.execute('''
+            CREATE TABLE IF NOT EXISTS price_history (
+                pair TEXT,
+                price REAL,
+                timestamp DATETIME,
+                PRIMARY KEY (pair, timestamp)
+            )
+        ''')
+        conn.commit()
+
+def store_price(pair: str, price: float):
+    """Store a price point in the database"""
+    now = datetime.utcnow()
+    with sqlite3.connect('price_history.db') as conn:
+        c = conn.cursor()
+        try:
+            c.execute('INSERT OR REPLACE INTO price_history (pair, price, timestamp) VALUES (?, ?, ?)',
+                     (pair, price, now))
+            conn.commit()
+        except sqlite3.Error as e:
+            print(f"Database error: {e}")
+
+def get_price_history(pair: str, limit: int = 96) -> List[float]:
+    """Get historical prices for a pair"""
+    with sqlite3.connect('price_history.db') as conn:
+        c = conn.cursor()
+        try:
+            c.execute('''
+                SELECT price FROM price_history 
+                WHERE pair = ? 
+                ORDER BY timestamp DESC 
+                LIMIT ?
+            ''', (pair, limit))
+            prices = [row[0] for row in c.fetchall()]
+            return prices[::-1]  # Reverse to get chronological order
+        except sqlite3.Error as e:
+            print(f"Database error: {e}")
+            return []
+
+def cleanup_old_prices():
+    """Remove price data older than 24 hours"""
+    cutoff = datetime.utcnow() - timedelta(hours=24)
+    with sqlite3.connect('price_history.db') as conn:
+        c = conn.cursor()
+        try:
+            c.execute('DELETE FROM price_history WHERE timestamp < ?', (cutoff,))
+            conn.commit()
+        except sqlite3.Error as e:
+            print(f"Database cleanup error: {e}")
+
+@app.before_first_request
+def initialize_database():
+    init_db()
+    
+# Price update background task
+def update_prices_task():
+    while True:
+        try:
+            # Get all unique pairs from active positions
+            pairs = get_active_pairs()  # You'll need to implement this based on your data structure
+            
+            for pair in pairs:
+                try:
+                    # Fetch current price from CoinDCX API
+                    price = fetch_current_price(pair)  # You'll need to implement this
+                    if price:
+                        store_price(pair, price)
+                except Exception as e:
+                    print(f"Error updating price for {pair}: {e}")
+            
+            # Cleanup old data
+            cleanup_old_prices()
+            
+        except Exception as e:
+            print(f"Price update error: {e}")
+        
+        time.sleep(15)  # Wait 15 seconds before next update
+
+# Start the background task
+price_update_thread = threading.Thread(target=update_prices_task, daemon=True)
+price_update_thread.start()
+
 analyzer = FuturesPortfolioAnalyzer(
     os.getenv('COINDCX_API_KEY'),
     os.getenv('COINDCX_API_SECRET')
@@ -386,36 +476,78 @@ def get_portfolio():
 def get_charts():
     try:
         data = analyzer.get_portfolio_data()
+        positions = data['positions']
         
-        pnl_fig = go.Figure(data=[
-            go.Bar(
-                x=[p['pair'].replace('B-', '') for p in data['positions']],
-                y=[p['pnl'] for p in data['positions']],
-                marker_color=['green' if x > 0 else 'red' for x in [p['pnl'] for p in data['positions']]],
-                text=[f"{p['pnl']:.2f}" for p in data['positions']],
-                textposition='auto'
-            )
-        ])
-        pnl_fig.update_layout(title="PnL by Position", yaxis_title="PnL (USDT)")
-        
+        # Create a figure for position sizes (needed for pairs list)
         size_fig = go.Figure(data=[
             go.Bar(
-                x=[p['pair'].replace('B-', '') for p in data['positions']],
-                y=[abs(p['active_pos']) for p in data['positions']],
-                marker_color=['blue' if p['active_pos'] > 0 else 'orange' for p in data['positions']],
-                text=[f"{'Long' if p['active_pos'] > 0 else 'Short'}" for p in data['positions']],
+                x=[p['pair'].replace('B-', '') for p in positions],
+                y=[abs(p['active_pos']) for p in positions],
+                marker_color=['blue' if p['active_pos'] > 0 else 'orange' for p in positions],
+                text=[f"{'Long' if p['active_pos'] > 0 else 'Short'}" for p in positions],
                 textposition='auto'
             )
         ])
-        size_fig.update_layout(title="Position Sizes", yaxis_title="Size")
+        
+        # Extract price data for each position
+        price_data = {
+            'entry': [p['avg_price'] for p in positions],
+            'current': [p['current_price'] for p in positions],
+            'liquidation': [p.get('liquidation_price', None) for p in positions],
+            'stopLoss': [p.get('stop_loss_trigger', None) for p in positions],
+            'takeProfit': [p.get('take_profit_trigger', None) for p in positions]
+        }
         
         return jsonify({
-            'pnl': json.loads(json.dumps(pnl_fig, cls=PlotlyJSONEncoder)),
-            'positions': json.loads(json.dumps(size_fig, cls=PlotlyJSONEncoder))
+            'positions': json.loads(json.dumps(size_fig, cls=PlotlyJSONEncoder)),
+            'prices': price_data
         })
     except Exception as e:
         print(f"Charts API Error: {e}")
         return jsonify({'error': 'Failed to generate charts'}), 500
+
+@app.route('/api/price-history/<pair>')
+def get_pair_history(pair):
+    try:
+        prices = get_price_history(pair)
+        return jsonify({
+            'success': True,
+            'prices': prices
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@app.route('/api/current-prices', methods=['POST'])
+def get_current_prices():
+    try:
+        data = request.get_json()
+        pairs = data.get('pairs', [])
+        
+        result = {}
+        for pair in pairs:
+            try:
+                current_price = fetch_current_price(pair)  # Implement based on your data source
+                historical_prices = get_price_history(pair)
+                
+                result[pair] = {
+                    'current': current_price,
+                    'historical': historical_prices
+                }
+            except Exception as e:
+                print(f"Error fetching price for {pair}: {e}")
+                result[pair] = {
+                    'error': str(e)
+                }
+        
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
 
 @app.route('/health')
 def health_check():
@@ -425,6 +557,40 @@ def health_check():
         'api_configured': bool(os.getenv('COINDCX_API_KEY') and os.getenv('COINDCX_API_SECRET')),
         'timestamp': int(time.time())
     })
+
+def get_active_pairs() -> List[str]:
+    """Get list of trading pairs from active positions"""
+    try:
+        # Get positions from your existing portfolio endpoint
+        positions = get_portfolio()  # Implement based on your data structure
+        if positions and 'positions' in positions:
+            return [pos['pair'] for pos in positions['positions']]
+        return []
+    except Exception as e:
+        print(f"Error getting active pairs: {e}")
+        return []
+
+def fetch_current_price(pair: str) -> Optional[float]:
+    """Fetch current price for a trading pair from CoinDCX API"""
+    try:
+        # Replace with your actual API endpoint
+        response = requests.get(f'https://api.coindcx.com/exchange/ticker')
+        if response.status_code == 200:
+            data = response.json()
+            # Find the matching pair in the response
+            pair_data = next((item for item in data if item['market'] == pair), None)
+            if pair_data:
+                return float(pair_data['last_price'])
+        return None
+    except Exception as e:
+        print(f"Error fetching price for {pair}: {e}")
+        return None
+
+def get_portfolio():
+    """Get portfolio data from your existing implementation"""
+    # This should return your existing portfolio data structure
+    # Implement based on your current portfolio fetching logic
+    pass
 
 if __name__ == '__main__':
     print("Starting CoinDCX Futures Portfolio Analyzer...")
